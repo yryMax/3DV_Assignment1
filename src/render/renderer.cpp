@@ -157,7 +157,27 @@ glm::vec4 Renderer::traceRayMIP(const Ray& ray, float stepSize) const
 glm::vec4 Renderer::traceRayISO(const Ray& ray, float stepSize) const
 {
     static constexpr glm::vec3 isoColor { 0.8f, 0.8f, 0.2f };
-    return glm::vec4(isoColor, 1.0f);
+    float isoValue = m_config.isoValue;
+    for (float t = ray.tmin; t < ray.tmax; t += stepSize) {
+        const glm::vec3 samplePos = ray.origin + t * ray.direction;
+        const float val = m_pVolume->getSampleInterpolate(samplePos);
+        if (val > isoValue) {
+            const float t0 = t - stepSize;
+            const float t1 = t;
+            if (m_config.bisection) {
+                t = bisectionAccuracy(ray, t0, t1, isoValue);
+            }
+            const glm::vec3 isoPos = ray.origin + t * ray.direction;
+            if (m_config.volumeShading) {
+                const volume::GradientVoxel gradient = m_pGradientVolume->getGradientInterpolate(isoPos);
+                const glm::vec3 L = glm::normalize(m_pCamera->position() - isoPos);
+                const glm::vec3 V = glm::normalize(ray.direction);
+                return glm::vec4(computePhongShading(isoColor, gradient, L, V), 1.0f);
+            }
+            return glm::vec4(isoColor, 1.0f);
+        }
+    }
+    return glm::vec4(0.0, 0.0, 0.0 , 1.0f);
 }
 
 // ======= TODO: IMPLEMENT ========
@@ -166,7 +186,20 @@ glm::vec4 Renderer::traceRayISO(const Ray& ray, float stepSize) const
 // iterations such that it does not get stuck in degerate cases.
 float Renderer::bisectionAccuracy(const Ray& ray, float t0, float t1, float isoValue) const
 {
-    return 0.0f;
+    int maxIterations = 100;
+    for (int i = 0; i < maxIterations; i++) {
+        const float t = (t0 + t1) / 2.0f;
+        const glm::vec3 samplePos = ray.origin + t * ray.direction;
+        const float val = m_pVolume->getSampleInterpolate(samplePos);
+        if (std::abs(val - isoValue) < 0.01f) {
+            return t;
+        }
+        if (val < isoValue) {
+            t0 = t;
+        } else {
+            t1 = t;
+        }
+    }
 }
 
 // ======= TODO: IMPLEMENT ========
@@ -176,7 +209,24 @@ float Renderer::bisectionAccuracy(const Ray& ray, float t0, float t1, float isoV
 
 glm::vec3 Renderer::computePhongShading(const glm::vec3& color, const volume::GradientVoxel& gradient, const glm::vec3& L, const glm::vec3& V, float ambientCoefficient, float diffuseCoefficient, float specularCoefficient, int specularPower)
 {
-    return glm::vec3(0.0f);
+
+    //std::cout<< ambientCoefficient <<" " << diffuseCoefficient << " " << specularCoefficient << " " << specularPower << std::endl;
+    glm::vec3 N = glm::normalize(gradient.dir);
+    glm::vec3 lightDir = glm::normalize(-L);
+    glm::vec3 viewDir = glm::normalize(V);
+
+    glm::vec3 ambient = color * ambientCoefficient;
+
+    float diffuseFactor = std::max(glm::dot(N, lightDir), 0.0f);
+    glm::vec3 diffuse = color * diffuseCoefficient * diffuseFactor;
+
+    glm::vec3 R = glm::reflect(-lightDir, N);
+    float specularFactor = std::pow(std::max(glm::dot(R, viewDir), 0.0f), specularPower);
+    glm::vec3 specular = glm::vec3(1.0f) * specularCoefficient * specularFactor;
+
+    glm::vec3 finalColor = ambient + diffuse + specular;
+    return glm::clamp(finalColor, 0.0f, 1.0f);
+
 }
 
 // ======= TODO: IMPLEMENT ========

@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 #include <gsl/span>
 #include <iostream>
-#include <string>
+#include <cstring>
 
 struct Header {
     glm::ivec3 dim;
