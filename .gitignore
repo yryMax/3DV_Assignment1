@@ -35,3 +35,7 @@ cmake-build-debug/
 cmake/
 volume data/
 .idea/
+
+#Other
+.vs/
+out/

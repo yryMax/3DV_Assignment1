@@ -234,8 +234,40 @@ glm::vec3 Renderer::computePhongShading(const glm::vec3& color, const volume::Gr
 // Use getTFValue to compute the color for a given volume value according to the 1D transfer function.
 glm::vec4 Renderer::traceRayComposite(const Ray& ray, float stepSize) const
 {
-    return glm::vec4(0.0f);
+    glm::vec3 accumulatedColor(0.0f);
+    float accumulatedAlpha = 0.0f;
+
+    // the number of steps ray length and step size.
+    float rayLength = ray.tmax - ray.tmin;
+    int numSteps = static_cast<int>(std::ceil(rayLength / stepSize));
+
+    for (int i = 0; i < numSteps; ++i) {
+        float currentT = ray.tmin + i * stepSize;
+        glm::vec3 samplePos = ray.origin + ray.direction * currentT;
+
+        // volume value at the current sample position.
+        float val = m_pVolume->getSampleInterpolate(samplePos);
+
+        // Use volume value to get color and opacity.
+        glm::vec4 tfValue = getTFValue(val);
+        glm::vec3 color = glm::vec3(tfValue);
+        float alpha = tfValue.a;
+
+        // Perform front-to-back compositing.
+        accumulatedColor += (1.0f - accumulatedAlpha) * color * alpha;
+        accumulatedAlpha += (1.0f - accumulatedAlpha) * alpha;
+
+        // Early termination opacity is close to 1.
+        if (accumulatedAlpha >= 1.0f) {
+            break;
+        }
+    }
+
+    return glm::vec4(accumulatedColor, accumulatedAlpha);
 }
+
+
+ 
 
 // ======= DO NOT MODIFY THIS FUNCTION ========
 // Looks up the color+opacity corresponding to the given volume value from the 1D tranfer function LUT (m_config.tfColorMap).
