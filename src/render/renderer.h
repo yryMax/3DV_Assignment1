@@ -45,7 +45,7 @@ protected:
 
     float bisectionAccuracy(const Ray& ray, float t0, float t1, float isoValue) const;
 
-    static glm::vec3 computePhongShading(const glm::vec3& color, const volume::GradientVoxel& gradient, const glm::vec3& L, const glm::vec3& V, float ambientCoefficient=0.1f, float diffuseCoefficient=0.7f, float specularCoefficient=0.2f, int specularPower=25);
+    static glm::vec3 computePhongShading(const glm::vec3& color, const volume::GradientVoxel& gradient, const glm::vec3& L, const glm::vec3& V, float ambientCoefficient=0.1f, float diffuseCoefficient=0.7f, float specularCoefficient=0.2f, int specularPower=100);
 
 
 
