@@ -31,21 +31,17 @@
 *.out
 *.app
 
-<<<<<<< Updated upstream
 cmake-build-debug/
 cmake/
 volume data/
 .idea/
-=======
-<<<<<<< HEAD
->>>>>>> Stashed changes
+
 
 #Other
 .vs/
 out/
 voloume_data/
 voloum_data_-_large/
-=======
 cmake-build-debug/
 cmake/
 volume data/
@@ -54,4 +50,3 @@ volume data/
 #Other
 .vs/
 out/
->>>>>>> origin/main
