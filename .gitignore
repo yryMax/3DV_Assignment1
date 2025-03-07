@@ -31,10 +31,14 @@
 *.out
 *.app
 
+<<<<<<< Updated upstream
 cmake-build-debug/
 cmake/
 volume data/
 .idea/
+=======
+<<<<<<< HEAD
+>>>>>>> Stashed changes
 
 #Other
 .vs/
