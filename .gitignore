@@ -39,3 +39,15 @@ volume data/
 #Other
 .vs/
 out/
+voloume_data/
+voloum_data_-_large/
+=======
+cmake-build-debug/
+cmake/
+volume data/
+.idea/
+
+#Other
+.vs/
+out/
+>>>>>>> origin/main
