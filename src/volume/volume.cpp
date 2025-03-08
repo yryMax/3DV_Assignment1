@@ -124,8 +124,31 @@ float Volume::getSampleNearestNeighbourInterpolation(const glm::vec3& coord) con
 // This function returns the trilinear interpolated value at the continuous 3D position given by coord.
 float Volume::getSampleTriLinearInterpolation(const glm::vec3& coord) const
 {
-    return 0.0f;
+    // check if we have space for x0+1, y0+1, and z0+1 // boundary edge case
+    if (coord.x < 0.0f || coord.x >= m_dim.x - 1 || coord.y < 0.0f || coord.y >= m_dim.y - 1 || coord.z < 0.0f || coord.z >= m_dim.z - 1) {
+        return 0.0f;
+    }
+
+    // integer part of z
+    int z0 = floor(coord.z);
+    int z1 = z0 + 1;
+    //            z1
+    ///          /     /
+    // -------- z0-----y
+    ///          \x     \
+    // fractional part, how far we acually are in z corner/section between z0 and z1
+    float dz = coord.z - float(z0);
+
+    // interpolate in the XY plane for z0
+    float valZ0 = biLinearInterpolate(glm::vec2(coord.x, coord.y), z0);
+
+    // interpolate in the XY plane for z1
+    float valZ1 = biLinearInterpolate(glm::vec2(coord.x, coord.y), z1);
+
+    // interpolate along z using dz
+    return linearInterpolate(valZ0, valZ1, dz);
 }
+
 
 // This function linearly interpolates the value at X using incoming values g0 and g1 given a factor (equal to the positon of x in 1D)
 //
@@ -133,13 +156,45 @@ float Volume::getSampleTriLinearInterpolation(const glm::vec3& coord) const
 //   factor
 float Volume::linearInterpolate(float g0, float g1, float factor)
 {
-    return 0.0f;
+    // f(g0) * (1 - |factor - 0|) + f(g1) * (1 - |factor - 1|) value times the kernel, slide 83 L1
+    return g0 * (1.0f - factor) + g1 * factor;
 }
 
 // This function bi-linearly interpolates the value at the given continuous 2D XY coordinate for a fixed integer z coordinate.
 float Volume::biLinearInterpolate(const glm::vec2& xyCoord, int z) const
 {
-    return 0.0f;
+    float x = xyCoord.x;
+    float y = xyCoord.y;
+
+    // check for volume boundary
+    if (x < 0.0f || x >= m_dim.x - 1 || y < 0.0f || y >= m_dim.y - 1) {
+        return 0.0f;
+    }
+
+    // extract integer coordinates for the 4 corners from x & y
+    // x0--------z--------x1
+    int x0 = floor(x);
+    int x1 = x0 + 1;
+    // same but veritcal
+    int y0 = floor(y);
+    int y1 = y0 + 1;
+
+
+    // get 4 surrounding voxels
+    float v00 = getVoxel(x0, y0, z);
+    float v10 = getVoxel(x1, y0, z); 
+    float v01 = getVoxel(x0, y1, z); 
+    float v11 = getVoxel(x1, y1, z); 
+
+   
+    // first interpolate in x direction (dx)
+    float dx = x - x0; //fractional parts along x
+    float i0 = linearInterpolate(v00, v10, dx);
+    float i1 = linearInterpolate(v01, v11, dx);
+
+    // interpolate those in y direction (horizontally) slide 88
+    float dy = y - y0; //fractional parts along y
+    return linearInterpolate(i0, i1, dy);
 }
 
 
