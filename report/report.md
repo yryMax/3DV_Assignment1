@@ -24,4 +24,20 @@ The images of the pig and carp show two distinct angles from which the different
   <img src="./shading_pig.png" alt="viewpoint 2" style="width:46%;">
   <img src="./shading_carp.png" alt="viewpoint 3" style="width:46%;">
 </div>
-<center>Phong shading with linear interpolation of the pig (left) and carp (right) volumes.<center/>
+<center>Phong shading with linear interpolation of the pig (left) and carp (right) volumes.</center>
+
+
+
+### 1D Transfer Function 
+Compositing raycasting was implemented in traceRayComposite, allowing visualization of internal structures using a 1D transfer function. The ray traverses the volume, accumulating colour and opacity values to create a smooth rendering of materials. The implementation follows a front-to-back compositing approach with early termination for efficiency.
+
+#### Example Screenshots
+
+Screenshot 1: Shows compositing on the Carp8 dataset, revealing internal structures. The image demonstrates how the transfer function allows differentiating between multiple material types within the volume. The smooth gradient transitions in opacity help visualize the depth and internal structure of the dataset.
+
+Screenshot 2: Displays a scanned backpack with various contents, including a distinct elongated tube that is clearly highlighted in yellow. The transfer function effectively isolates different materials, making the tube stand out from the surrounding objects. The ability to adjust the transfer function allows for selective enhancement of specific features, demonstrating the flexibility of the compositing method for diverse datasets.
+
+<div style="display: flex; justify-content: space-between;">
+  <img src="./1d_1.png" alt="viewpoint 2" style="width:46%;">
+  <img src="./1d_2.png" alt="viewpoint 3" style="width:46%;">
+</div>
