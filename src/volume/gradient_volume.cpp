@@ -115,7 +115,72 @@ GradientVoxel GradientVolume::getGradientNearestNeighbor(const glm::vec3& coord)
 // Use the linearInterpolate function that you implemented below.
 GradientVoxel GradientVolume::getGradientLinearInterpolate(const glm::vec3& coord) const
 {
-    return GradientVoxel {};
+    // Following the explanation of Trilinear Interpolation from https://en.wikipedia.org/wiki/Trilinear_interpolation
+    // First obtain the lattice points needed to calculate xd, yd, zd
+    // Point 0 is the one below the coordinate and 1 is the one above (in their respective dimensions)
+    int x0 = glm::floor(coord.x);
+    int x1 = x0 + 1;
+    int y0 = glm::floor(coord.y);
+    int y1 = y0 + 1;
+    int z0 = glm::floor(coord.z);
+    int z1 = z0 + 1;
+
+    // Making sure they are in range (clamp from 0 to dimension in that direction - 1 (indices))
+    x0 = glm::clamp(x0, 0, m_dim.x - 1);
+    x1 = glm::clamp(x1, 0, m_dim.x - 1);
+    y0 = glm::clamp(y0, 0, m_dim.y - 1);
+    y1 = glm::clamp(y1, 0, m_dim.y - 1);
+    z0 = glm::clamp(z0, 0, m_dim.z - 1);
+    z1 = glm::clamp(z1, 0, m_dim.z - 1);
+
+    // Then compute differences of the x,y,z coordinates and the smaller coordinate related; this gives xd, yd and zd
+    
+    // Make them 0 in case x1 == x0 due to clamping (otherwise division by 0)
+    float xd = 0;
+    float yd = 0;
+    float zd = 0;
+
+    // Otherwise compute based on the formula
+    if (x1 != x0) xd = (coord.x - x0) / (x1 - x0);
+    if (y1 != y0) yd = (coord.y - y0) / (y1 - y0);
+    if (z1 != z0) zd = (coord.z - z0) / (z1 - z0);
+
+    // Since we are working with gradients we need to get the respective gradient for each of the cube corners points
+    // the cube corners correspond to the combinations of the coordinates calculated aboce
+
+    // LOWER PLANE
+    //  - front side
+    GradientVoxel c000 = getGradient(x0, y0, z0);
+    GradientVoxel c100 = getGradient(x1, y0, z0);
+    
+    //  - back side
+    GradientVoxel c010 = getGradient(x0, y1, z0);
+    GradientVoxel c110 = getGradient(x1, y1, z0);
+
+    // UPPER PLANE
+    //  - front side
+    GradientVoxel c001 = getGradient(x0, y0, z1);
+    GradientVoxel c101 = getGradient(x1, y0, z1);
+
+    //  - back side
+    GradientVoxel c011 = getGradient(x0, y1, z1);
+    GradientVoxel c111 = getGradient(x1, y1, z1);
+
+    // INTERPOLATING
+    // First we interpolate along x
+    GradientVoxel c00 = linearInterpolate(c000, c100, xd);
+    GradientVoxel c01 = linearInterpolate(c001, c101, xd);
+    GradientVoxel c10 = linearInterpolate(c010, c110, xd);
+    GradientVoxel c11 = linearInterpolate(c011, c111, xd);
+
+    // Then we interpolate along y
+    GradientVoxel c0 = linearInterpolate(c00, c10, yd);
+    GradientVoxel c1 = linearInterpolate(c01, c11, yd);
+
+    // And then z
+    GradientVoxel c = linearInterpolate(c0, c1, zd);
+
+    return c;
 }
 
 // ======= TODO : IMPLEMENT ========
@@ -123,7 +188,9 @@ GradientVoxel GradientVolume::getGradientLinearInterpolate(const glm::vec3& coor
 // At t=0, linearInterpolate should return g0 and at t=1 it returns g1.
 GradientVoxel GradientVolume::linearInterpolate(const GradientVoxel& g0, const GradientVoxel& g1, float factor)
 {
-    return GradientVoxel {};
+    glm::vec3 direction = glm::mix(g0.dir, g1.dir, factor);
+    float magnitude = glm::mix(g0.magnitude, g1.magnitude, factor);
+    return GradientVoxel {direction, magnitude};
 }
 
 // This function returns a gradientVoxel without using interpolation
