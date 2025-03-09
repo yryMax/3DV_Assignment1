@@ -2,7 +2,19 @@
 
 Group 12
 
+#### Tri-linear interpolation
+Trilinear interpolation is a method for approximating values at non-integer coordinates within a structured voxel grid. Unlike nearest neighbour interpolation, which applies a box filter, trilinear interpolation computes a weighted average of the eight surrounding voxels based on their relative distances to the target coordinate. The process consists of two bilinear interpolations performed on opposite faces of the voxel cube, followed by a linear interpolation along the third axis. As illustrated in Figure 1 using slicer mode, this results in a smoother transition of values across voxel boundaries, reducing visual artifacts such as blockiness of the nearest neighbour.
+
+<div style="display: flex; justify-content: space-between;">
+  <img src="./tomatoNN.png" alt="viewpoint 2" style="width:46%;">
+  <img src="./tomatoLinear.png" alt="viewpoint 3" style="width:46%;">
+</div>
+Figure 1(left): Visualization of nearest neighbour interpolation in slicer mode on tomato.fld with rendering resolution of (720,720) and rendering time of 247s.
+
+Figure 1(right): Visualization of trilinear interpolation in slicer mode on tomato.fld with rendering resolution of (720,720) and rendering time of 215s.
+
 #### Iso-surface Raycasting
+
 Isosurface raycasting is a threshold-based rendering technique where parts of the image with values below a specified threshold are "peeled away" or discarded, while contours above the threshold are preserved. It is achieved by continuously sampling along a ray: if a voxel’s strength exceeds the threshold, a designated target color is displayed; otherwise, the corresponding pixel is black.
 
 A binary search approach can be employed to achieve higher precision in isosurface raycasting. This method assumes that the strength values along each sampled segment of the ray increase monotonically and search for a position that is most similar with the threshold.
@@ -25,8 +37,6 @@ The images of the pig and carp show two distinct angles from which the different
   <img src="./shading_carp.png" alt="viewpoint 3" style="width:46%;">
 </div>
 <center>Phong shading with linear interpolation of the pig (left) and carp (right) volumes.</center>
-
-
 
 ### 1D Transfer Function 
 Compositing raycasting was implemented in traceRayComposite, allowing visualization of internal structures using a 1D transfer function. The ray traverses the volume, accumulating colour and opacity values to create a smooth rendering of materials. The implementation follows a front-to-back compositing approach with early termination for efficiency.
